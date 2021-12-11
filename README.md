@@ -337,3 +337,111 @@ Keterangan:
 
 Untuk melakukan pengecekan, dengan `nmap -p 80 [IP_Jipangu/IP_Doriki]` untuk mendapatkan informasi bahwa akses HTTP sudah ditutup pada server Jipangu dan Doriki. <br>
 <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662025-320490ab-daeb-4b96-87c4-f06ab7dbc3a3.png">
+
+## Soal 3
+Karena kelompok kalian maksimal terdiri dari 3 orang. Luffy meminta kalian untuk membatasi DHCP dan DNS Server hanya boleh menerima maksimal 3 koneksi ICMP secara bersamaan menggunakan iptables, selebihnya didrop.
+
+Pada Jipangu (DHCP Server) dan Doriki (DNS Server), tambahkan perintah berikut.
+```
+iptables -A INPUT -p icmp -m connlimit --connlimit-above 3 --connlimit-mask 0 -j DROP
+```
+
+Keterangan:
+- `-A INPUT` : Menggunakan chain INPUT karena dikonfigurasikan langsung pada Jipangu dan Doriki
+- `-p icmp` : Protokol yang digunakan, yaitu icmp (ping)
+- `-m connlimit` : Menggunakan rule connection limit
+- `--connlimit-above 3` : Limit yang ditangkap paket adalah di atas 3
+- `--connlimit-mask 0` : Hanya memperbolehkan 3 koneksi setiap subnet dalam satu waktu
+- `-j DROP` : Paket di drop
+
+Pengecekan dengan melakukan ping IP Jipangu/Doriki di 4 node secara bersamaan. Untuk node ke-4, akan tidak berhasil.<br>
+- Pengecekan untuk server Jipangu. Jorge merupakan node ke-4 yang melakukan ping ke server Jipangu <br>
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662253-bb05bda9-ebbb-4fa9-9494-efb4adf0f3f7.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662261-97211ae8-010c-4761-be9a-90e443c6a64f.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662264-bd4ce438-b8cf-4661-b87c-621588cf0ddb.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662273-e89de065-0dd6-47f8-886a-f096b0cac71a.png">
+
+- Pengecekan untuk server Doriki. Jorge merupakan node ke-4 yang melakukan ping ke server Doriki <br>
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662329-ff45189f-bb2a-45d1-b605-96f357ab68b1.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662339-20f2ac38-1cd8-4f09-a9a0-4fba54e2f758.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662343-0a742976-0fd2-472b-80a6-80b2630c22b1.png">
+  <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662348-ecf895b3-8575-4959-8f1d-f5269b9f3158.png">
+
+## Soal 4
+Kemudian kalian diminta untuk membatasi akses ke Doriki yang berasal dari subnet Blueno, Cipher, Elena dan Fukuro dengan beraturan sebagai berikut
+- Akses dari subnet Blueno dan Cipher hanya diperbolehkan pada pukul 07.00 - 15.00 pada hari Senin sampai Kamis. Selain itu di reject
+
+Pada Doriki, tambahkan perintah berikut:
+```bash
+# Blueno
+iptables -A INPUT -s 192.192.0.128/25 -m time --timestart 07:00 --timestop 15:00 --weekdays Mon,Tue,Wed,Thu -j ACCEPT
+iptables -A INPUT -s 192.192.0.128/25 -j REJECT
+
+# Cipher
+iptables -A INPUT -s 192.192.4.0/22 -m time --timestart 07:00 --timestop 15:00 --weekdays Mon,Tue,Wed,Thu -j ACCEPT
+iptables -A INPUT -s 192.192.4.0/22 -j REJECT
+```
+
+Keterangan:
+- `-A INPUT` : Menggunakan chain INPUT karena langsung dikonfigurasi pada Doriki
+- `-s 192.192.0.128/25` dan `-s 192.192.4.0/22` : Alamat asal paket, yaitu subnet A2 dan A3
+- `-m time` : Menggunakan rule time
+- `--timestart 07:00` : Waktu mulai
+- `--timestop 15:00` : Waktu berakhir
+- `--weekdays Mon,Tue,Wed,Thu` : Hari
+- `-j ACCEPT` : Paket diterima
+
+Untuk konfigurasi iptables paket ditolak:
+- `-j REJECT` : Paket ditolak. Sehingga Doriki hanya bisa menerima paket dari waktu yang sudah dikonfigurasi sebelumnya
+
+Pengecekan dengan mengganti tanggal di Blueno dan Cipher di luar dari waktu yang diperbolehkan. Kemudian ping Doriki melalui Blueno dan Cipher.
+- Melalui Blueno
+  - Setting waktu pada Rabu, jam 08:00 <br>
+    <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662690-e438e351-558f-4e89-b08f-ba3546773a1c.png">
+  - Setting waktu pada Jumat, jam 08:00 <br>
+    <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662723-d8d4f008-0734-40a8-b380-27cf6cc2cfa9.png">
+  
+- Melalui Cipher
+  - Setting waktu pada Rabu, jam 08:00 <br>
+    <img width="537" alt="image" src="https://user-images.githubusercontent.com/68428942/145662762-6198c0ec-9f5a-45b3-8f5b-f77575946b0d.png">
+  - Setting waktu pada Jumat, jam 08:00 <br>
+    <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662777-3611f822-729b-40c2-8787-4a739781bf70.png">
+
+## Soal 5
+Kemudian kalian diminta untuk membatasi akses ke Doriki yang berasal dari subnet Blueno, Cipher, Elena dan Fukuro dengan beraturan sebagai berikut
+- Akses dari subnet Elena dan Fukuro hanya diperbolehkan pada pukul 15.01 hingga pukul 06.59 setiap harinya. Selain itu di reject
+
+Pada Doriki, tambahkan perintah berikut:
+```bash
+# Elena
+iptables -A INPUT -s 192.192.2.0/23 -m time --timestart 15:01 --timestop 23:59 -j ACCEPT
+iptables -A INPUT -s 192.192.2.0/23 -m time --timestart 00:00 --timestop 06:59 -j ACCEPT
+iptables -A INPUT -s 192.192.2.0/23 -j REJECT
+
+# Fukurou
+iptables -A INPUT -s 192.192.1.0/24 -m time --timestart 15:01 --timestop 23:59 -j ACCEPT
+iptables -A INPUT -s 192.192.1.0/24 -m time --timestart 00:00 --timestop 06:59 -j ACCEPT
+iptables -A INPUT -s 192.192.1.0/24 -j REJECT
+```
+Keterangan:
+- `-A INPUT` : Menggunakan chain INPUT karena langsung dikonfigurasi pada Doriki
+- `-s 192.192.2.0/23` dan `-A INPUT -s 192.192.1.0/24` : Alamat asal paket, yaitu subnet A6 dan A7
+- `-m time` : Menggunakan rule time
+- `--timestart 07:00` Waktu mulai dengan waktu berakhir `--timestop 23:59`
+- `--timestart 00:00` Waktu mulai dengan waktu berakhir `--timestop 06:59`
+- `-j ACCEPT` : Paket diterima
+
+Konfigurasi dibagi dua karena rule time hanya dapat menerima waktu dari 00:00 hingga 23:59.
+
+Pengecekan dengan mengganti waktu di Elena dan Fukurou di luar jam yang diperbolehkan. Kemudian ping Doriki melalui Elena dan Fukurou.
+- Melalui Elena
+  - Waktu di setting menjadi jam 01:00 <br>
+    <img width="537" alt="image" src="https://user-images.githubusercontent.com/68428942/145662874-85558edf-b10e-4fa6-a787-84b425074520.png">
+  - Waktu di setting mnejadi jam 08:00 <br>
+    <img width="537" alt="image" src="https://user-images.githubusercontent.com/68428942/145662881-61215bea-3c7c-409a-8ce1-1bada740975a.png">
+
+- Melalui Fukurou
+  - Waktu di setting menjadi jam 01:00 <br>
+    <img width="537" alt="image" src="https://user-images.githubusercontent.com/68428942/145662898-f8c466ad-02f5-426d-a8d2-2286e7e7a279.png">
+  - Waktu di setting mnejadi jam 08:00 <br>
+    <img width="537" alt="image" src="https://user-images.githubusercontent.com/68428942/145662917-493a8f3f-c55a-446f-b2d5-85bf0c506818.png">
