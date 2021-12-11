@@ -192,7 +192,28 @@ route add -net 192.192.1.0 netmask 255.255.255.0 gw 192.192.0.6
 route add -net 192.192.0.24 netmask 255.255.255.248 gw 192.192.0.6
 ```
 
-eth3"
+## Soal D
+Tugas berikutnya adalah memberikan ip pada subnet Blueno, Cipher, Fukurou, dan Elena secara dinamis menggunakan bantuan DHCP server. Kemudian kalian ingat bahwa kalian harus setting DHCP Relay pada router yang menghubungkannya.
+
+### Water7, Foosha, Guanhao sebagai DHCP Relay
+Lakukan instalasi berikut pada router yang bertindak sebagai DHCP Relay.
+```
+apt-get update
+apt-get install isc-dhcp-relay -y
+```
+Lakukan konfigurasi pada file `/etc/default/isc-dhcp-relay`. Pada bagian `SERVERS=`, masukkan IP milik DHCP Server (Jipangu) dan pada bagian `INTERFACES=` masukkan interface yang terhubung dengan DHCP Client dan DHCP Server. Berikut konfigurasi yang perlu ditambahkan untuk masing-masing router.
+```shell
+# Water7
+SERVERS="192.192.0.11"
+INTERFACES="eth0 eth1 eth2 eth3"
+
+# Foosha
+SERVERS="192.192.0.11"
+INTERFACES="eth1 eth2"
+
+# Guanhao
+SERVERS="192.192.0.11"
+INTERFACES="eth0 eth1 eth3"
 ```
 Restart DHCP Relay dengan perintah `service isc-dhcp-relay restart`.
 Lakukan konfigurasi pada file `/etc/sysctl.conf` untuk membuka IP Forwarding dengan menghapus komentar pada baris:
@@ -316,4 +337,3 @@ Keterangan:
 
 Untuk melakukan pengecekan, dengan `nmap -p 80 [IP_Jipangu/IP_Doriki]` untuk mendapatkan informasi bahwa akses HTTP sudah ditutup pada server Jipangu dan Doriki. <br>
 <img width="538" alt="image" src="https://user-images.githubusercontent.com/68428942/145662025-320490ab-daeb-4b96-87c4-f06ab7dbc3a3.png">
-
